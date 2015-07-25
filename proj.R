@@ -4,28 +4,48 @@
 
 setwd("./data")
 
+#Necessary Package
+  library(caret)
+  library(ggplot2)
+  library(randomForest)
+  library(plyr)
+  library(e1071)
+
 #import data
-train_data <- read.csv("train.csv", header = T, sep = ",")
-test_data <- read.csv("test.csv", header = T, sep = ",")
+  train_data <- read.csv("train.csv", header = T, sep = ",")
+  test_data <- read.csv("test.csv", header = T, sep = ",")
 
 #Clean Data
-source('~/GitHub/pml_proj/clean_na_cols.R')
+  source('~/GitHub/pml_proj/clean_na_cols.R')
+#Source Data Writing Function
+  source('~/GitHub/pml_proj/pml_write_files.R')
+  
 #Remove the columns with mostly NAs
-clean_train <- clean_na_cols(train_data)
-#Remove columns first 7 columns
-clean_train <- clean_train[,-(1:7)]
+    clean_train <- clean_na_cols(train_data)
+    clean_test <- clean_na_cols(test_data)
+  #Remove columns first 7 columns
+    clean_train <- clean_train[,-(1:7)]
+    clean_test <- clean_test[,-(1:7)]
 
-#get new window lines
+inTrain <- createDataPartition(clean_train$classe, p = .1, list = F)
+
+training <- clean_train[inTrain,]
+testing <- clean_train[-inTrain,]
+
+#RandomForest Model
+  model <- train(classe ~ ., data = training, preProcess = c("center","scale"), method = "rf" )
+
+#Gradient Boosted Model
+# model <- train(classe ~ ., data = training, preProcess = c("center","scale"), method = "gbm" )
+#Support Vector Machine
+# model <- train(classe ~ ., data = training, preProcess = c("center","scale"), method = "svm" )
+
+validation <- predict(model, newdata = testing)
+test_set <- predict(model, newdata = clean_test)
+
+confusionMatrix(testing$classe, validation)
+
+#output results
+  pml_write_files(test_set)
 
 
-library(caret)
-library(ggplot2)
-library(randomForest)
-library(plyr)
-
-inTrain <- createDataPartition(clean_train$classe, p = .6, list = F)
-
-train <- clean_train[inTrain,]
-test <- trn_nw[-inTrain,]
-
-model <- 

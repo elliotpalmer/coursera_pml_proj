@@ -1,0 +1,17 @@
+{
+    "contents" : "pml_write_files = function(x){\n  n = length(x)\n  for(i in 1:n){\n    filename = paste0(\"problem_id_\",i,\".txt\")\n    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)\n  }\n}",
+    "created" : 1437848704075.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2761617342",
+    "id" : "A4604F56",
+    "lastKnownWriteTime" : 1437848746,
+    "path" : "~/GitHub/pml_proj/pml_write_files.R",
+    "project_path" : "pml_write_files.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : true,
+    "type" : "r_source"
+}
