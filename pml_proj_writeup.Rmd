@@ -1,0 +1,115 @@
+---
+title: 'Coursera: Practical Machine Learning Project'
+author: "palm1221ks"
+date: "Sunday, July 26, 2015"
+output: html_document
+---
+
+##Executive Summary
+This analysis seeks to predict which of 5 weightlifting activities are being performed based on data collected by sensors placed on participants. The data was collected in a highly controlled environment by trained professionals to ensure participants performed the activities with proper form and consistency. Overall, due to the efforts to maintain strict control over the movements, it is possible to predict the movements with high accuracy.
+
+###Loading Data
+
+Training Data is downloaded from: 
+<https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv> 
+
+Testing Data is downloaded from: 
+<https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv> 
+
+###Data Cleaning and Formatting
+The data sets provided include a number of data points with NA or blank values, therefore it is necessary to clean the data set and remove them. I chose to remove the columns because the missing data represented a majority of the points from each column. Furthermore, the first 7 columns of the data are either not useful (participants name, time stamps) or bias the model (window number).
+
+```
+clean_na_cols <- function(x, p = .9) {
+  
+  #Create Blank Vector to record the NA Columns
+    k <- as.numeric(vector())
+  #Loop through each column and evaluate the number of NA's/Blanks
+    for(i in 1:length(x)){
+        
+        na_count <- sum(is.na(x[,i]))
+        blnk_cnt <- sum(x[,i]=="")
+        
+        col_len <- length(x[,i])
+        
+        na_prop <- na_count/col_len
+        bl_prop <- blnk_cnt/col_len
+        
+        if(na_prop<p & bl_prop<p){
+          k <- rbind(k,i)
+        }
+        
+    }
+  #Return the clean dataset
+    clean_na_cols <- x[,k]
+  
+}
+```
+
+###Model Selection
+Using the Caret package I chose to run a random forest model with 30% for training and 70% for validation. I chose the small training sample simply due to processing performance. Furthermore, I pre-processed the data minimally by simply centering and scaling each feature.
+
+```
+#Remove the columns with mostly NAs
+    clean_train <- clean_na_cols(train_data)
+    clean_test <- clean_na_cols(test_data)
+  #Remove columns first 7 columns
+    clean_train <- clean_train[,-(1:7)]
+    clean_test <- clean_test[,-(1:7)]
+
+inTrain <- createDataPartition(clean_train$classe, p = .3, list = F)
+
+training <- clean_train[inTrain,]
+testing <- clean_train[-inTrain,]
+
+#RandomForest Model
+  model <- train(classe ~ ., data = training, preProcess = c("center","scale"), method = "rf" )
+```
+
+###Cross-Validation
+The data was cross-validated on 70% of the training data and achieved 98% accuracy which based on the size of the validation set suggests a very reliable estimate of the overall accuracy of this model.
+
+```
+#Cross Validation
+  validation <- predict(model, newdata = testing)
+  confusionMatrix(testing$classe, validation)
+```
+
+```
+Confusion Matrix and Statistics
+
+          Reference
+Prediction    A    B    C    D    E
+         A 3885    9    8    2    2
+         B   54 2579   21    1    2
+         C    2   55 2329    9    0
+         D    1    2   54 2188    6
+         E    1   16    7   18 2482
+
+Overall Statistics
+                                          
+               Accuracy : 0.9803          
+                 95% CI : (0.9779, 0.9826)
+    No Information Rate : 0.2871          
+    P-Value [Acc > NIR] : < 2.2e-16       
+                                          
+                  Kappa : 0.9751          
+ Mcnemar's Test P-Value : < 2.2e-16       
+
+Statistics by Class:
+
+                     Class: A Class: B Class: C Class: D Class: E
+Sensitivity            0.9853   0.9692   0.9628   0.9865   0.9960
+Specificity            0.9979   0.9930   0.9942   0.9945   0.9963
+Pos Pred Value         0.9946   0.9706   0.9724   0.9720   0.9834
+Neg Pred Value         0.9941   0.9926   0.9921   0.9974   0.9991
+Prevalence             0.2871   0.1938   0.1761   0.1615   0.1815
+Detection Rate         0.2829   0.1878   0.1696   0.1593   0.1807
+Detection Prevalence   0.2844   0.1935   0.1744   0.1639   0.1838
+Balanced Accuracy      0.9916   0.9811   0.9785   0.9905   0.9961
+```
+
+###Conclusion
+
+With minimal effort this it was possible to predict the the correct activity with high accuracy. I imagine that with additional effort it would be possible to produce even better results approaching perfect accuracy. The high control maintained during the collection of the data make this possible and an effective learning exercise.
+

@@ -1,0 +1,17 @@
+{
+    "contents" : "#Practical Machine Learning Project\n\n#Data Site: http://groupware.les.inf.puc-rio.br/har\n\nsetwd(\"../data\")\n\n#Necessary Package\n  library(caret)\n  library(ggplot2)\n  library(randomForest)\n  library(plyr)\n  library(e1071)\n\n#import data\n  train_data <- read.csv(\"train.csv\", header = T, sep = \",\")\n  test_data <- read.csv(\"test.csv\", header = T, sep = \",\")\n\n#Clean Data\n  source('~/GitHub/pml_proj/clean_na_cols.R')\n#Source Data Writing Function\n  source('~/GitHub/pml_proj/pml_write_files.R')\n  \n#Remove the columns with mostly NAs\n    clean_train <- clean_na_cols(train_data)\n    clean_test <- clean_na_cols(test_data)\n  #Remove columns first 7 columns\n    clean_train <- clean_train[,-(1:7)]\n    clean_test <- clean_test[,-(1:7)]\n\ninTrain <- createDataPartition(clean_train$classe, p = .3, list = F)\n\ntraining <- clean_train[inTrain,]\ntesting <- clean_train[-inTrain,]\n\n#RandomForest Model\n  model <- train(classe ~ ., data = training, preProcess = c(\"center\",\"scale\"), method = \"rf\" )\n\n#Gradient Boosted Model\n# model <- train(classe ~ ., data = training, preProcess = c(\"center\",\"scale\"), method = \"gbm\" )\n#Support Vector Machine\n# model <- train(classe ~ ., data = training, preProcess = c(\"center\",\"scale\"), method = \"svm\" )\n\n#Cross Validation\n  validation <- predict(model, newdata = testing)\n  confusionMatrix(testing$classe, validation)\n\n#output results\n  test_set <- predict(model, newdata = clean_test)\n  pml_write_files(test_set)\n\n\n",
+    "created" : 1437847890078.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1520715487",
+    "id" : "E088CFA5",
+    "lastKnownWriteTime" : 1437923177,
+    "path" : "~/GitHub/pml_proj/proj.R",
+    "project_path" : "proj.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}

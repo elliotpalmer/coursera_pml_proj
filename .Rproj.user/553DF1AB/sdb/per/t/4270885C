@@ -1,0 +1,17 @@
+{
+    "contents" : "#Clean_up_data\n\n## Cycle through each column and delete columns with Majority NA values\n\nclean_na_cols <- function(x, p = .9) {\n  \n  #Create Blank Vector to record the NA Columns\n    k <- as.numeric(vector())\n  #Loop through each column and evaluate the number of NA's/Blanks\n    for(i in 1:length(x)){\n        \n        na_count <- sum(is.na(x[,i]))\n        blnk_cnt <- sum(x[,i]==\"\")\n        \n        col_len <- length(x[,i])\n        \n        na_prop <- na_count/col_len\n        bl_prop <- blnk_cnt/col_len\n        \n        if(na_prop<p & bl_prop<p){\n          k <- rbind(k,i)\n        }\n        \n    }\n  #Return the clean dataset\n    clean_na_cols <- x[,k]\n  \n}",
+    "created" : 1437847944857.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "422496958",
+    "id" : "4270885C",
+    "lastKnownWriteTime" : 1437923179,
+    "path" : "~/GitHub/pml_proj/clean_na_cols.R",
+    "project_path" : "clean_na_cols.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}

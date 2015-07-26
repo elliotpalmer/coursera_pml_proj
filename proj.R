@@ -2,7 +2,7 @@
 
 #Data Site: http://groupware.les.inf.puc-rio.br/har
 
-setwd("./data")
+setwd("../data")
 
 #Necessary Package
   library(caret)
@@ -27,7 +27,7 @@ setwd("./data")
     clean_train <- clean_train[,-(1:7)]
     clean_test <- clean_test[,-(1:7)]
 
-inTrain <- createDataPartition(clean_train$classe, p = .1, list = F)
+inTrain <- createDataPartition(clean_train$classe, p = .3, list = F)
 
 training <- clean_train[inTrain,]
 testing <- clean_train[-inTrain,]
@@ -40,12 +40,12 @@ testing <- clean_train[-inTrain,]
 #Support Vector Machine
 # model <- train(classe ~ ., data = training, preProcess = c("center","scale"), method = "svm" )
 
-validation <- predict(model, newdata = testing)
-test_set <- predict(model, newdata = clean_test)
-
-confusionMatrix(testing$classe, validation)
+#Cross Validation
+  validation <- predict(model, newdata = testing)
+  confusionMatrix(testing$classe, validation)
 
 #output results
+  test_set <- predict(model, newdata = clean_test)
   pml_write_files(test_set)
 
 
