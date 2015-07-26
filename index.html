@@ -1,0 +1,183 @@
+<!doctype html>
+<!-- The Time Machine GitHub pages theme was designed and developed by Jon Rohan, on Feb 7, 2012. -->
+<!-- Follow him for fun. http://twitter.com/jonrohan. Tail his code on https://github.com/jonrohan -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <link rel="stylesheet" href="stylesheets/stylesheet.css" media="screen">
+  <link rel="stylesheet" href="stylesheets/github-dark.css">
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type="text/javascript" src="javascripts/script.js"></script>
+
+  <title>Pml proj</title>
+  <meta name="description" content="">
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+</head>
+
+<body>
+
+  <div class="wrapper">
+    <header>
+      <h1 class="title">Pml proj</h1>
+    </header>
+    <div id="container">
+      <p class="tagline"></p>
+      <div id="main" role="main">
+        <div class="download-bar">
+        <div class="inner">
+          <a href="https://github.com/palm1221ks/pml_proj/tarball/master" class="download-button tar"><span>Download</span></a>
+          <a href="https://github.com/palm1221ks/pml_proj/zipball/master" class="download-button zip"><span>Download</span></a>
+          <a href="https://github.com/palm1221ks/pml_proj" class="code">View Pml proj on GitHub</a>
+        </div>
+        <span class="blc"></span><span class="trc"></span>
+        </div>
+        <article class="markdown-body">
+          <hr>
+
+<p>title: 'Coursera: Practical Machine Learning Project'
+author: "palm1221ks"
+date: "Sunday, July 26, 2015"</p>
+
+<h2>
+<a id="output-html_document" class="anchor" href="#output-html_document" aria-hidden="true"><span class="octicon octicon-link"></span></a>output: html_document</h2>
+
+<h2>
+<a id="executive-summary" class="anchor" href="#executive-summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Executive Summary</h2>
+
+<p>This analysis seeks to predict which of 5 weightlifting activities are being performed based on data collected by sensors placed on participants. The data was collected in a highly controlled environment by trained professionals to ensure participants performed the activities with proper form and consistency. Overall, due to the efforts to maintain strict control over the movements, it is possible to predict the movements with high accuracy.</p>
+
+<h3>
+<a id="loading-data" class="anchor" href="#loading-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Loading Data</h3>
+
+<p>Training Data is downloaded from: 
+<a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv</a> </p>
+
+<p>Testing Data is downloaded from: 
+<a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv</a> </p>
+
+<h3>
+<a id="data-cleaning-and-formatting" class="anchor" href="#data-cleaning-and-formatting" aria-hidden="true"><span class="octicon octicon-link"></span></a>Data Cleaning and Formatting</h3>
+
+<p>The data sets provided include a number of data points with NA or blank values, therefore it is necessary to clean the data set and remove them. I chose to remove the columns because the missing data represented a majority of the points from each column. Furthermore, the first 7 columns of the data are either not useful (participants name, time stamps) or bias the model (window number).</p>
+
+<pre><code>clean_na_cols &lt;- function(x, p = .9) {
+
+  #Create Blank Vector to record the NA Columns
+    k &lt;- as.numeric(vector())
+  #Loop through each column and evaluate the number of NA's/Blanks
+    for(i in 1:length(x)){
+
+        na_count &lt;- sum(is.na(x[,i]))
+        blnk_cnt &lt;- sum(x[,i]=="")
+
+        col_len &lt;- length(x[,i])
+
+        na_prop &lt;- na_count/col_len
+        bl_prop &lt;- blnk_cnt/col_len
+
+        if(na_prop&lt;p &amp; bl_prop&lt;p){
+          k &lt;- rbind(k,i)
+        }
+
+    }
+  #Return the clean dataset
+    clean_na_cols &lt;- x[,k]
+
+}
+</code></pre>
+
+<h3>
+<a id="model-selection" class="anchor" href="#model-selection" aria-hidden="true"><span class="octicon octicon-link"></span></a>Model Selection</h3>
+
+<p>Using the Caret package I chose to run a random forest model with 30% for training and 70% for validation. I chose the small training sample simply due to processing performance. Furthermore, I pre-processed the data minimally by simply centering and scaling each feature.</p>
+
+<pre><code>#Remove the columns with mostly NAs
+    clean_train &lt;- clean_na_cols(train_data)
+    clean_test &lt;- clean_na_cols(test_data)
+  #Remove columns first 7 columns
+    clean_train &lt;- clean_train[,-(1:7)]
+    clean_test &lt;- clean_test[,-(1:7)]
+
+inTrain &lt;- createDataPartition(clean_train$classe, p = .3, list = F)
+
+training &lt;- clean_train[inTrain,]
+testing &lt;- clean_train[-inTrain,]
+
+#RandomForest Model
+  model &lt;- train(classe ~ ., data = training, preProcess = c("center","scale"), method = "rf" )
+</code></pre>
+
+<h3>
+<a id="cross-validation" class="anchor" href="#cross-validation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Cross-Validation</h3>
+
+<p>The data was cross-validated on 70% of the training data and achieved 98% accuracy which based on the size of the validation set suggests a very reliable estimate of the overall accuracy of this model.</p>
+
+<pre><code>#Cross Validation
+  validation &lt;- predict(model, newdata = testing)
+  confusionMatrix(testing$classe, validation)
+</code></pre>
+
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction    A    B    C    D    E
+         A 3885    9    8    2    2
+         B   54 2579   21    1    2
+         C    2   55 2329    9    0
+         D    1    2   54 2188    6
+         E    1   16    7   18 2482
+
+Overall Statistics
+
+               Accuracy : 0.9803          
+                 95% CI : (0.9779, 0.9826)
+    No Information Rate : 0.2871          
+    P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+
+                  Kappa : 0.9751          
+ Mcnemar's Test P-Value : &lt; 2.2e-16       
+
+Statistics by Class:
+
+                     Class: A Class: B Class: C Class: D Class: E
+Sensitivity            0.9853   0.9692   0.9628   0.9865   0.9960
+Specificity            0.9979   0.9930   0.9942   0.9945   0.9963
+Pos Pred Value         0.9946   0.9706   0.9724   0.9720   0.9834
+Neg Pred Value         0.9941   0.9926   0.9921   0.9974   0.9991
+Prevalence             0.2871   0.1938   0.1761   0.1615   0.1815
+Detection Rate         0.2829   0.1878   0.1696   0.1593   0.1807
+Detection Prevalence   0.2844   0.1935   0.1744   0.1639   0.1838
+Balanced Accuracy      0.9916   0.9811   0.9785   0.9905   0.9961
+</code></pre>
+
+<h3>
+<a id="conclusion" class="anchor" href="#conclusion" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conclusion</h3>
+
+<p>With minimal effort this it was possible to predict the the correct activity with high accuracy. I imagine that with additional effort it would be possible to produce even better results approaching perfect accuracy. The high control maintained during the collection of the data make this possible and an effective learning exercise.</p>
+        </article>
+      </div>
+    </div>
+    <footer>
+      <div class="owner">
+      <p><a href="https://github.com/palm1221ks" class="avatar"><img src="https://avatars2.githubusercontent.com/u/7354203?v=3&amp;s=60" width="48" height="48"></a> <a href="https://github.com/palm1221ks">palm1221ks</a> maintains <a href="https://github.com/palm1221ks/pml_proj">Pml proj</a></p>
+
+
+      </div>
+      <div class="creds">
+        <small>This page generated using <a href="https://pages.github.com/">GitHub Pages</a><br>theme by <a href="https://twitter.com/jonrohan/">Jon Rohan</a></small>
+      </div>
+    </footer>
+  </div>
+  <div class="current-section">
+    <a href="#top">Scroll to top</a>
+    <a href="https://github.com/palm1221ks/pml_proj/tarball/master" class="tar">tar</a><a href="https://github.com/palm1221ks/pml_proj/zipball/master" class="zip">zip</a><a href="" class="code">source code</a>
+    <p class="name"></p>
+  </div>
+
+  
+</body>
+</html>
